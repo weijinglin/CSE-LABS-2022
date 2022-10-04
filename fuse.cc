@@ -125,10 +125,22 @@ fuseserver_setattr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
     if (FUSE_SET_ATTR_SIZE & to_set) {
         printf("   fuseserver_setattr set size to %zu\n", attr->st_size);
 
-#if 0
+#if 1
     struct stat st;
     // Change the above line to "#if 1", and your code goes here
     // Note: fill st using getattr before fuse_reply_attr
+    chfs_client::inum inum = ino; // req->in.h.nodeid;
+    chfs_client::status ret;
+
+    // update the attribute
+    chfs->setattr(inum,attr->st_size);
+
+    ret = getattr(inum, st);
+    if(ret != chfs_client::OK){
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+    fuse_reply_attr(req, &st, 0);
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -154,8 +166,18 @@ void
 fuseserver_read(fuse_req_t req, fuse_ino_t ino, size_t size,
         off_t off, struct fuse_file_info *fi)
 {
-#if 0
+#if 1
     // Change the above "#if 0" to "#if 1", and your code goes here
+    chfs_client::inum inum = ino; // req->in.h.nodeid;
+    chfs_client::status ret;
+    std::string res;
+
+    ret = chfs->read(inum,size,off,res);
+    if(ret == chfs_client::OK){
+        fuse_reply_buf(req,res.c_str(),res.length());
+    }else{
+        fuse_reply_err(req, ENOSYS);
+    }
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -183,8 +205,19 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
         const char *buf, size_t size, off_t off,
         struct fuse_file_info *fi)
 {
-#if 0
+#if 1
     // Change the above line to "#if 1", and your code goes here
+    chfs_client::inum inum = ino; // req->in.h.nodeid;
+    chfs_client::status ret;
+    size_t write_size;
+
+    ret = chfs->write(inum,size,off,buf,write_size);
+    if(ret == chfs_client::OK){
+        printf("reply okk\n");
+        fuse_reply_write(req,write_size);
+    }else{
+        fuse_reply_err(req, ENOSYS);
+    }
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -226,7 +259,14 @@ fuseserver_createhelper(fuse_ino_t parent, const char *name,
     if (ret != chfs_client::OK)
         return ret;
     e->ino = inum;
+
+    printf("before get attr is all ok\n");
+
     ret = getattr(inum, e->attr);
+
+    // add some code to debug
+    printf("create okk\n");
+
     return ret;
 }
 
@@ -384,8 +424,19 @@ fuseserver_mkdir(fuse_req_t req, fuse_ino_t parent, const char *name,
     // Suppress compiler warning of unused e.
     (void) e;
 
-#if 0
+#if 1
     // Change the above line to "#if 1", and your code goes here
+    chfs_client::status ret;
+    if( (ret = fuseserver_createhelper( parent, name, mode, &e, extent_protocol::T_DIR)) == chfs_client::OK ) {
+        fuse_reply_entry(req, &e);
+        printf("OK: create returns.\n");
+    } else {
+        if (ret == chfs_client::EXIST) {
+            fuse_reply_err(req, EEXIST);
+        }else{
+            fuse_reply_err(req, ENOENT);
+        }
+    }
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
