@@ -9,14 +9,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-// a time function
-// time will add one when call once
-unsigned int my_timer(){
-    static unsigned int curr_time = 0;
-    curr_time++;
-    return curr_time; 
-}
-
 chfs_client::chfs_client()
 {
     ec = new extent_client();

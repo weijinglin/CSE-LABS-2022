@@ -465,6 +465,21 @@ fuseserver_unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     }
 }
 
+// readlink
+/**
+	 * Read symbolic link
+	 *
+	 * Valid replies:
+	 *   fuse_reply_readlink
+	 *   fuse_reply_err
+	 *
+	 * @param req request handle
+	 * @param ino the inode number
+	 */
+void fuseserver_readlink(fuse_req_t req, fuse_ino_t ino){
+
+}
+
 void
 fuseserver_statfs(fuse_req_t req)
 {
@@ -522,6 +537,9 @@ main(int argc, char *argv[])
     fuseserver_oper.setattr    = fuseserver_setattr;
     fuseserver_oper.unlink     = fuseserver_unlink;
     fuseserver_oper.mkdir      = fuseserver_mkdir;
+
+    // try to implement readlink
+    fuseserver_oper.readlink = fuseserver_readlink; 
     /** Your code here for Lab.
      * you may want to add
      * routines here to implement symbolic link,

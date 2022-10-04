@@ -1,6 +1,13 @@
 #include "inode_manager.h"
 #include <iostream>
 
+// a timer function
+// add the time when call it
+unsigned int my_timer(){
+    static unsigned int curr_time = 0;
+    curr_time++;
+    return curr_time;
+}
 
 // some helpful function
 bool check_bit(char op_char,int pos){
@@ -360,6 +367,9 @@ inode_manager::read_file(uint32_t inum, char **buf_out, int *size)
   *size = ino->size;
   *buf_out = new char[*size];
 
+  // update atime
+  ino->atime = my_timer();
+
   // the bytes that has not been into the string
   int left_num = *size;
 
@@ -420,6 +430,10 @@ inode_manager::write_file(uint32_t inum, const char *buf, int size)
   
   // write to cover the previous thing
   inode* ino = get_inode(inum);
+
+  // update mtime and ctime
+  ino->ctime = ino->mtime = my_timer();
+
   if(size > ino->size){
     // need to alloc new block
 
