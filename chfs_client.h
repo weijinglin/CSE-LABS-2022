@@ -45,6 +45,7 @@ class chfs_client {
 
   int getfile(inum, fileinfo &);
   int getdir(inum, dirinfo &);
+  int get_sym(inum,fileinfo &);
 
   int setattr(inum, size_t);
   int lookup(inum, const char *, bool &, inum &);
@@ -55,6 +56,8 @@ class chfs_client {
   int unlink(inum,const char *);
   int mkdir(inum , const char *, mode_t , inum &);
   int create_sym(inum parent, const char *name, inum &ino_out);
+  int read_link(inum ino, std::string &buf);
+  int rmdir(inum parent,const char* name);
   
   /** you may need to add symbolic link related methods here.*/
 };

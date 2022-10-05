@@ -58,7 +58,7 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_ctime = info.ctime;
         st.st_size = info.size;
         printf("   getattr -> %llu\n", info.size);
-    } else {
+    } else if(chfs->isdir(inum)){
         chfs_client::dirinfo info;
         ret = chfs->getdir(inum, info);
         if(ret != chfs_client::OK)
@@ -69,6 +69,20 @@ getattr(chfs_client::inum inum, struct stat &st)
         st.st_mtime = info.mtime;
         st.st_ctime = info.ctime;
         printf("   getattr -> %lu %lu %lu\n", info.atime, info.mtime, info.ctime);
+    } else if(chfs->is_sym(inum)){
+        chfs_client::fileinfo info;
+        ret = chfs->get_sym(inum, info);
+        if(ret != chfs_client::OK)
+            return ret;
+        st.st_mode = S_IFLNK | 0777;
+        st.st_nlink = 1;
+        st.st_atime = info.atime;
+        st.st_mtime = info.mtime;
+        st.st_ctime = info.ctime;
+        st.st_size = info.size;
+        printf("   getattr -> %llu\n", info.size);
+    }else{
+        printf("type err in fuse\n");
     }
     return chfs_client::OK;
 }
@@ -478,6 +492,17 @@ fuseserver_unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 	 */
 void fuseserver_readlink(fuse_req_t req, fuse_ino_t ino)
 {
+    chfs_client::status ret;
+    std::string res;
+    ret = chfs->read_link(ino,res);
+
+    if(ret != chfs_client::OK){
+        fuse_reply_err(req,ENOENT);
+    }
+
+    printf("fuse readlink finish\n");
+    printf("get link is %s\n",res.c_str());
+    fuse_reply_readlink(req,res.c_str());
 
 }
 
@@ -532,6 +557,28 @@ fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,const cha
         fuse_reply_err(req,ENOENT);
     }
 
+}
+
+/**
+	 * Remove a directory
+	 *
+	 * Valid replies:
+	 *   fuse_reply_err
+	 *
+	 * @param req request handle
+	 * @param parent inode number of the parent directory
+	 * @param name to remove
+	 */
+void
+fuseserver_rmdir(fuse_req_t req, fuse_ino_t parent, const char *name)
+{
+    // delete a directory
+    chfs_client::status ret;
+
+    ret = chfs->rmdir(parent,name);
+    if(ret != chfs_client::OK){
+        fuse_reply_err(req,ENOENT);
+    }
 }
 
 void
@@ -595,6 +642,7 @@ main(int argc, char *argv[])
     // try to implement symlink and readlink
     fuseserver_oper.readlink = fuseserver_readlink;
     fuseserver_oper.symlink = fuseserver_symlink; 
+    fuseserver_oper.rmdir = fuseserver_rmdir;
     /** Your code here for Lab.
      * you may want to add
      * routines here to implement symbolic link,

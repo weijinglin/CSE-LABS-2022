@@ -62,6 +62,53 @@ chfs_client::isfile(inum inum)
  * 
  * */
 
+// function : delete a directory
+int 
+chfs_client::rmdir(inum parent,const char* name)
+{
+    int r = OK;
+    std::list<dirent> list;
+    inum c_ino;
+    bool is_exist;
+    lookup(parent,name,is_exist,c_ino);
+    if(!is_exist){
+        return r;
+    }else{
+        extent_protocol::attr a;
+        ec->getattr(c_ino,a);
+        if(a.type != extent_protocol::T_DIR){
+            return NOENT;
+        }else{
+            readdir(c_ino,list);
+            for(auto item : list){
+                extent_protocol::attr st;
+                ec->getattr(item.inum,st);
+                if(st.type == extent_protocol::T_DIR){
+                    rmdir(c_ino,item.name.c_str());
+                }else{
+                    ec->remove(item.inum);
+                }
+            }
+            return OK;
+        }
+    }
+}
+
+// function : read a symbol link
+int
+chfs_client::read_link(inum ino, std::string &buf)
+{
+    int r = OK;
+
+    if(ec->get(ino,buf) != extent_protocol::OK){
+        r = IOERR;
+        return r;
+    }
+
+    printf("readlink okk\n");
+    return r;
+}
+
 // function: create a symbol link
 int 
 chfs_client::create_sym(inum parent, const char *name, inum &ino_out)
@@ -155,6 +202,27 @@ chfs_client::getfile(inum inum, fileinfo &fin)
     fin.ctime = a.ctime;
     fin.size = a.size;
     printf("getfile %016llx -> sz %llu\n", inum, fin.size);
+
+release:
+    return r;
+}
+
+int chfs_client::get_sym(inum inum,fileinfo &fin)
+{
+    int r = OK;
+
+    printf("getsym %016llx\n", inum);
+    extent_protocol::attr a;
+    if (ec->getattr(inum, a) != extent_protocol::OK) {
+        r = IOERR;
+        goto release;
+    }
+
+    fin.atime = a.atime;
+    fin.mtime = a.mtime;
+    fin.ctime = a.ctime;
+    fin.size = a.size;
+    printf("getsym %016llx -> sz %llu\n", inum, fin.size);
 
 release:
     return r;
