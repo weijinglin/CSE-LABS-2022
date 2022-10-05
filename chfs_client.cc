@@ -53,7 +53,7 @@ chfs_client::isfile(inum inum)
         printf("isfile: %lld is a file\n", inum);
         return true;
     } 
-    printf("isfile: %lld is a dir\n", inum);
+    printf("isfile: %lld is not a file\n", inum);
     return false;
 }
 /** Your code here for Lab...
@@ -62,11 +62,80 @@ chfs_client::isfile(inum inum)
  * 
  * */
 
+// function: create a symbol link
+int 
+chfs_client::create_sym(inum parent, const char *name, inum &ino_out)
+{
+    int r = OK;
+
+    /*
+     * your code goes here.
+     * note: lookup is what you need to check if file exist;
+     * after create file or dir, you must remember to modify the parent infomation.
+     */
+
+    bool is_exist;
+    lookup(parent,name,is_exist,ino_out);
+    if(is_exist){
+        return chfs_client::EXIST;
+    }else{
+        // try to create new file
+        // eid here is same as inum
+        ec->create(extent_protocol::T_SYM, ino_out);
+
+        std::string inum = filename(ino_out);
+
+        std::string co_name = name;
+
+        std::string atomic = "/";
+
+        std::string input_buf = name + atomic + inum + atomic;
+
+        // write dir
+        // read previous file content
+        std::string buf;
+        ec->get(parent,buf);
+
+        input_buf = buf + input_buf;
+
+        // write back
+        ec->put(parent,input_buf);
+        
+        printf("create simple file success\n");
+    }
+
+    return r;
+}
+
+bool chfs_client::is_sym(inum inum)
+{
+    extent_protocol::attr a;
+
+    if (ec->getattr(inum, a) != extent_protocol::OK) {
+        printf("error getting attr\n");
+        return false;
+    }
+
+    if (a.type == extent_protocol::T_SYM) {
+        printf("isfile: %lld is a sym\n", inum);
+        return true;
+    } 
+    printf("isfile: %lld is not a sym\n", inum);
+    return false;
+}
+
 bool
 chfs_client::isdir(inum inum)
 {
     // Oops! is this still correct when you implement symlink?
-    return ! isfile(inum);
+    // return ! isfile(inum);
+    if(isfile(inum)){
+        return false;
+    }else if(is_sym(inum)){
+        return false;
+    }else{
+        return true;
+    }
 }
 
 int

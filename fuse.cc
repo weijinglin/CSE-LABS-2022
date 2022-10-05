@@ -476,7 +476,61 @@ fuseserver_unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 	 * @param req request handle
 	 * @param ino the inode number
 	 */
-void fuseserver_readlink(fuse_req_t req, fuse_ino_t ino){
+void fuseserver_readlink(fuse_req_t req, fuse_ino_t ino)
+{
+
+}
+
+/**
+	 * Create a symbolic link
+	 *
+	 * Valid replies:
+	 *   fuse_reply_entry
+	 *   fuse_reply_err
+	 *
+	 * @param req request handle
+	 * @param link the contents of the symbolic link
+	 * @param parent inode number of the parent directory
+	 * @param name to create
+	 */
+void
+fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,const char *name)
+{
+    printf("hit this func\n");
+    struct fuse_entry_param e;
+    chfs_client::status ret;
+
+    // In chfs, timeouts are always set to 0.0, and generations are always set to 0
+    e.attr_timeout = 0.0;
+    e.entry_timeout = 0.0;
+    e.generation = 0;
+
+    chfs_client::inum inum;
+    ret = chfs->create_sym(parent,name,inum);
+    if (ret == chfs_client::EXIST)
+        fuse_reply_err(req, EEXIST);
+    e.ino = inum;
+
+    // put core thing
+    std::string in_string = link;
+    size_t write_byte;
+    chfs->write(inum,in_string.length(),0,link,write_byte);
+    if(write_byte != in_string.length()){
+        printf("wrong in symbol link\n");
+    }
+
+    printf("before get attr is all ok\n");
+
+    ret = getattr(inum, e.attr);
+
+    // add some code to debug
+    printf("create okk\n");
+
+    if(ret == chfs_client::OK){
+        fuse_reply_entry(req,&e);
+    }else{
+        fuse_reply_err(req,ENOENT);
+    }
 
 }
 
@@ -538,8 +592,9 @@ main(int argc, char *argv[])
     fuseserver_oper.unlink     = fuseserver_unlink;
     fuseserver_oper.mkdir      = fuseserver_mkdir;
 
-    // try to implement readlink
-    fuseserver_oper.readlink = fuseserver_readlink; 
+    // try to implement symlink and readlink
+    fuseserver_oper.readlink = fuseserver_readlink;
+    fuseserver_oper.symlink = fuseserver_symlink; 
     /** Your code here for Lab.
      * you may want to add
      * routines here to implement symbolic link,
