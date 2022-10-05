@@ -11,61 +11,93 @@ max_readahead=0x00020000
    max_background=0
    congestion_threshold=0
    unique: 2, success, outsize: 40
-unique: 4, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 665
+unique: 4, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 1070
 extent_server: get 1
    unique: 4, error: -2 (No such file or directory), outsize: 16
-unique: 6, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 665
+unique: 6, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 1070
 extent_server: get 1
    unique: 6, error: -2 (No such file or directory), outsize: 16
-unique: 8, opcode: LOOKUP (1), nodeid: 1, insize: 54, pid: 665
+unique: 8, opcode: LOOKUP (1), nodeid: 1, insize: 54, pid: 1070
 extent_server: get 1
    unique: 8, error: -2 (No such file or directory), outsize: 16
-unique: 10, opcode: LOOKUP (1), nodeid: 1, insize: 54, pid: 665
+unique: 10, opcode: LOOKUP (1), nodeid: 1, insize: 54, pid: 1070
 extent_server: get 1
    unique: 10, error: -2 (No such file or directory), outsize: 16
-unique: 12, opcode: LOOKUP (1), nodeid: 1, insize: 51, pid: 665
+unique: 12, opcode: LOOKUP (1), nodeid: 1, insize: 51, pid: 1070
 extent_server: get 1
    unique: 12, error: -2 (No such file or directory), outsize: 16
-unique: 14, opcode: LOOKUP (1), nodeid: 1, insize: 51, pid: 665
+unique: 14, opcode: LOOKUP (1), nodeid: 1, insize: 51, pid: 1070
 extent_server: get 1
    unique: 14, error: -2 (No such file or directory), outsize: 16
-unique: 16, opcode: LOOKUP (1), nodeid: 1, insize: 52, pid: 665
+unique: 16, opcode: LOOKUP (1), nodeid: 1, insize: 52, pid: 1070
 extent_server: get 1
    unique: 16, error: -2 (No such file or directory), outsize: 16
-unique: 18, opcode: LOOKUP (1), nodeid: 1, insize: 52, pid: 665
+unique: 18, opcode: LOOKUP (1), nodeid: 1, insize: 52, pid: 1070
 extent_server: get 1
    unique: 18, error: -2 (No such file or directory), outsize: 16
-unique: 20, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 666
+unique: 20, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 1071
 extent_server: get 1
    unique: 20, error: -2 (No such file or directory), outsize: 16
-unique: 22, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 666
+unique: 22, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 1071
 extent_server: get 1
    unique: 22, error: -2 (No such file or directory), outsize: 16
-unique: 24, opcode: SYMLINK (6), nodeid: 1, insize: 57, pid: 666
-hit this func
+unique: 24, opcode: SYMLINK (6), nodeid: 1, insize: 57, pid: 1071
+hit sym
 extent_server: get 1
 extent_server: create inode
-type error
+	im: put_inode 2
 extent_server: get 1
 	im: put_inode 1
 write is okk
-create simple file success
-extent_server: get 1
+create symbol success
+extent_server: get 2
 second situlation
-	im: put_inode 1
+	im: put_inode 2
 write is okk
-before get attr is all ok
-extent_server: getattr 1
-isfile: 1 is not a file
-getattr 0000000000000001 0
-extent_server: getattr 1
-isfile: 1 is not a file
-getdir 0000000000000001
-extent_server: getattr 1
+sym before get attr is all ok
+extent_server: getattr 2
+isfile: 2 is not a file
+getattr 0000000000000002 0
+extent_server: getattr 2
+isfile: 2 is not a file
+getdir 0000000000000002
+extent_server: getattr 2
    getattr -> 0 15 15
-create okk
+sym create okk
    unique: 24, success, outsize: 144
-unique: 26, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 667
+unique: 26, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 1072
 extent_server: get 1
-   unique: 26, error: -2 (No such file or directory), outsize: 16
+extent_server: getattr 2
+isfile: 2 is not a file
+getattr 0000000000000002 0
+extent_server: getattr 2
+isfile: 2 is not a file
+getdir 0000000000000002
+extent_server: getattr 2
+   getattr -> 0 15 15
+   unique: 26, success, outsize: 144
+unique: 28, opcode: GETATTR (3), nodeid: 2, insize: 56, pid: 1072
+extent_server: getattr 2
+isfile: 2 is not a file
+getattr 0000000000000002 0
+extent_server: getattr 2
+isfile: 2 is not a file
+getdir 0000000000000002
+extent_server: getattr 2
+   getattr -> 0 15 15
+   unique: 28, success, outsize: 120
+unique: 30, opcode: LOOKUP (1), nodeid: 1, insize: 46, pid: 1072
+extent_server: get 1
+extent_server: getattr 2
+isfile: 2 is not a file
+getattr 0000000000000002 0
+extent_server: getattr 2
+isfile: 2 is not a file
+getdir 0000000000000002
+extent_server: getattr 2
+   getattr -> 0 15 15
+   unique: 30, success, outsize: 144
+unique: 32, opcode: LOOKUP (1), nodeid: 2, insize: 46, pid: 1072
+extent_server: get 2
+   unique: 32, error: -2 (No such file or directory), outsize: 16
 fuse: failed to unmount /home/stu/cse-lab/chfs1: Invalid argument

@@ -496,7 +496,7 @@ void fuseserver_readlink(fuse_req_t req, fuse_ino_t ino)
 void
 fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,const char *name)
 {
-    printf("hit this func\n");
+    printf("hit sym\n");
     struct fuse_entry_param e;
     chfs_client::status ret;
 
@@ -519,14 +519,14 @@ fuseserver_symlink(fuse_req_t req, const char *link, fuse_ino_t parent,const cha
         printf("wrong in symbol link\n");
     }
 
-    printf("before get attr is all ok\n");
+    printf("sym before get attr is all ok\n");
 
     ret = getattr(inum, e.attr);
 
-    // add some code to debug
-    printf("create okk\n");
 
     if(ret == chfs_client::OK){
+        // add some code to debug
+        printf("sym create okk\n");
         fuse_reply_entry(req,&e);
     }else{
         fuse_reply_err(req,ENOENT);

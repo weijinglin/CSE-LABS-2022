@@ -101,7 +101,7 @@ chfs_client::create_sym(inum parent, const char *name, inum &ino_out)
         // write back
         ec->put(parent,input_buf);
         
-        printf("create simple file success\n");
+        printf("create symbol success\n");
     }
 
     return r;

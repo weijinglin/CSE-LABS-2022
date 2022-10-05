@@ -282,6 +282,19 @@ inode_manager::alloc_inode(uint32_t type)
       delete ino;
     }
     std::cout << "no enough block" << std::endl;
+  }else if(type == extent_protocol::T_SYM){
+    // lookup all inode and find which type is 0 (it stand for free block)
+    for(;inum < INODE_NUM;++inum){
+      inode* ino = get_inode(inum);
+      if(ino->type == 0){
+        // find the free block
+        update_inode(ino,extent_protocol::T_SYM);
+        put_inode(inum,ino);
+        return inum;
+      }
+      delete ino;
+    }
+    std::cout << "no enough block" << std::endl;
   }else{
     std::cout << "type error" << std::endl;
   }
