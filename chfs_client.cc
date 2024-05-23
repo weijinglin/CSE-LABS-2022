@@ -1,6 +1,4 @@
 // chfs client.  implements FS operations using extent and lock server
-#include "chfs_client.h"
-#include "extent_client.h"
 #include <sstream>
 #include <iostream>
 #include <stdio.h>
@@ -9,15 +7,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-chfs_client::chfs_client()
-{
-    ec = new extent_client();
+// the code added
+#include "chfs_client.h"
+#include "extent_client.h"
 
-}
+// chfs_client::chfs_client()
+// {
+//     ec = new extent_client();
 
-chfs_client::chfs_client(std::string extent_dst, std::string lock_dst)
+chfs_client::chfs_client(std::string extent_dst)
 {
-    ec = new extent_client();
+    ec = new extent_client(extent_dst);
     if (ec->put(1, "") != extent_protocol::OK)
         printf("error init root dir\n"); // XYB: init root dir
 }
@@ -45,15 +45,12 @@ chfs_client::isfile(inum inum)
     extent_protocol::attr a;
 
     if (ec->getattr(inum, a) != extent_protocol::OK) {
-        printf("error getting attr\n");
         return false;
     }
 
     if (a.type == extent_protocol::T_FILE) {
-        printf("isfile: %lld is a file\n", inum);
         return true;
     } 
-    printf("isfile: %lld is not a file\n", inum);
     return false;
 }
 /** Your code here for Lab...
@@ -257,6 +254,7 @@ release:
 } while (0)
 
 // Only support set size of attr
+// Your code here for Lab2A: add logging to ensure atomicity
 int
 chfs_client::setattr(inum ino, size_t size)
 {
@@ -291,11 +289,14 @@ chfs_client::setattr(inum ino, size_t size)
     return r;
 }
 
+// Your code here for Lab2A: add logging to ensure atomicity
 int
 chfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out)
 {
     int r = OK;
-
+    file_timer simple_timer;
+    file_timer all_timer;
+    all_timer.UpDate();
     /*
      * your code goes here.
      * note: lookup is what you need to check if file exist;
@@ -309,7 +310,12 @@ chfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out)
     }else{
         // try to create new file
         // eid here is same as inum
+        // TODO(wjl) : add some timer code
+        simple_timer.UpDate();
+
         ec->create(extent_protocol::T_FILE, ino_out);
+
+        printf("create file cost time is %f\n",simple_timer.GetSecond());
 
         std::string inum = filename(ino_out);
 
@@ -327,14 +333,18 @@ chfs_client::create(inum parent, const char *name, mode_t mode, inum &ino_out)
         input_buf = buf + input_buf;
 
         // write back
+        simple_timer.UpDate();
         ec->put(parent,input_buf);
         
-        printf("create simple file success\n");
+        printf("create simple file success and put cost %f\n",simple_timer.GetSecond());
     }
+
+    printf("crate cost totally %f\n",all_timer.GetSecond());
 
     return r;
 }
 
+// Your code here for Lab2A: add logging to ensure atomicity
 int
 chfs_client::mkdir(inum parent, const char *name, mode_t mode, inum &ino_out)
 {
@@ -493,6 +503,7 @@ chfs_client::read(inum ino, size_t size, off_t off, std::string &data)
     return r;
 }
 
+// Your code here for Lab2A: add logging to ensure atomicity
 int
 chfs_client::write(inum ino, size_t size, off_t off, const char *data,
         size_t &bytes_written)
@@ -545,6 +556,7 @@ chfs_client::write(inum ino, size_t size, off_t off, const char *data,
     return r;
 }
 
+// Your code here for Lab2A: add logging to ensure atomicity
 int chfs_client::unlink(inum parent,const char *name)
 {
     int r = OK;

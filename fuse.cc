@@ -220,6 +220,8 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
         struct fuse_file_info *fi)
 {
 #if 1
+    file_timer simple_timer;
+    simple_timer.UpDate();
     // Change the above line to "#if 1", and your code goes here
     chfs_client::inum inum = ino; // req->in.h.nodeid;
     chfs_client::status ret;
@@ -227,11 +229,12 @@ fuseserver_write(fuse_req_t req, fuse_ino_t ino,
 
     ret = chfs->write(inum,size,off,buf,write_size);
     if(ret == chfs_client::OK){
-        printf("reply okk\n");
+        printf("reply write okk\n");
         fuse_reply_write(req,write_size);
     }else{
         fuse_reply_err(req, ENOSYS);
     }
+    printf("the write op consume %f\n",simple_timer.GetSecond());
 #else
     fuse_reply_err(req, ENOSYS);
 #endif
@@ -274,13 +277,11 @@ fuseserver_createhelper(fuse_ino_t parent, const char *name,
         return ret;
     e->ino = inum;
 
-    printf("before get attr is all ok\n");
+    file_timer get_timer;
+    get_timer.UpDate();
 
     ret = getattr(inum, e->attr);
-
-    // add some code to debug
-    printf("create okk\n");
-
+    printf("get attr consume %f\n",get_timer.GetSecond());
     return ret;
 }
 
@@ -288,11 +289,13 @@ void
 fuseserver_create(fuse_req_t req, fuse_ino_t parent, const char *name,
         mode_t mode, struct fuse_file_info *fi)
 {
+    file_timer simple_timer;
+    simple_timer.UpDate();
+
     struct fuse_entry_param e;
     chfs_client::status ret;
     if( (ret = fuseserver_createhelper( parent, name, mode, &e, extent_protocol::T_FILE)) == chfs_client::OK ) {
         fuse_reply_create(req, &e, fi);
-        printf("OK: create returns.\n");
     } else {
         if (ret == chfs_client::EXIST) {
             fuse_reply_err(req, EEXIST);
@@ -300,6 +303,8 @@ fuseserver_create(fuse_req_t req, fuse_ino_t parent, const char *name,
             fuse_reply_err(req, ENOENT);
         }
     }
+
+    printf("create a new file and consume %f\n",simple_timer.GetSecond());
 }
 
 void fuseserver_mknod( fuse_req_t req, fuse_ino_t parent, 
@@ -607,24 +612,25 @@ main(int argc, char *argv[])
 
     setvbuf(stdout, NULL, _IONBF, 0);
 
-#if 0
-    if(argc != 4){
-        fprintf(stderr, "Usage: chfs_client <mountpoint> <port-extent-server> <port-lock-server>\n");
+#if 1
+    if(argc != 3){
+        fprintf(stderr, "Usage: chfs_client <mountpoint> <port-extent-server>\n");
         exit(1);
     }
-#endif
+#else
     if(argc != 2){
         fprintf(stderr, "Usage: chfs_client <mountpoint>\n");
         exit(1);
     }
+#endif
     mountpoint = argv[1];
 
     srandom(getpid());
 
     myid = random();
 
-    // chfs = new chfs_client(argv[2], argv[3]);
-    chfs = new chfs_client();
+    chfs = new chfs_client(argv[2]);
+    // chfs = new chfs_client();
 
     fuseserver_oper.getattr    = fuseserver_getattr;
     fuseserver_oper.statfs     = fuseserver_statfs;

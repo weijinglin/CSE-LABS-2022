@@ -6,6 +6,37 @@
 #include "extent_client.h"
 #include <vector>
 
+#include<chrono>
+
+// a timer used to trace the performance
+class file_timer
+{
+private:
+    std::chrono::steady_clock::time_point _begin;
+    std::chrono::steady_clock::time_point _end;
+public:
+    file_timer()
+	{
+		_begin = std::chrono::steady_clock::time_point();
+		_end = std::chrono::steady_clock::time_point();
+	}
+    
+	virtual ~file_timer(){};  
+    
+    // update the begin timestamp
+    void UpDate()
+    {
+        _begin = std::chrono::steady_clock::now();
+    }
+
+	// get the time period from begin
+    double GetSecond()
+    {
+        _end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> temp = std::chrono::duration_cast<std::chrono::duration<double>>(_end - _begin);
+       	return temp.count();
+    }
+};
 
 class chfs_client {
   extent_client *ec;
@@ -30,14 +61,20 @@ class chfs_client {
     std::string name;
     chfs_client::inum inum;
   };
+  struct syminfo {
+    std::string slink;
+    unsigned long long size;
+    unsigned long atime;
+    unsigned long mtime;
+    unsigned long ctime;
+  };
 
  private:
   static std::string filename(inum);
   static inum n2i(std::string);
 
  public:
-  chfs_client();
-  chfs_client(std::string, std::string);
+  chfs_client(std::string);
 
   bool isfile(inum);
   bool isdir(inum);
@@ -45,7 +82,13 @@ class chfs_client {
 
   int getfile(inum, fileinfo &);
   int getdir(inum, dirinfo &);
-  int get_sym(inum,fileinfo &);
+
+  // the pos fixed in merge
+  int get_sym(inum, fileinfo&);
+
+  // the code merged
+  int getsymlink(inum, syminfo&);
+
 
   int setattr(inum, size_t);
   int lookup(inum, const char *, bool &, inum &);
@@ -60,6 +103,7 @@ class chfs_client {
   int rmdir(inum parent,const char* name);
   
   /** you may need to add symbolic link related methods here.*/
+
 };
 
 #endif 
